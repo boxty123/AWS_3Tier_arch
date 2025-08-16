@@ -13,6 +13,7 @@ variable "subnet_id" {
 
 variable "security_group_ids" {
   type        = list(string)
+  description = "연결할 보안그룹 ID 목록"
   default     = []
 }
 
@@ -24,11 +25,12 @@ variable "associate_public_ip" {
 
 variable "instance_profile" {
   type        = string
-  description = "IAM Instance Profile 이름 (SSM 등)"
+  description = "IAM Instance Profile 이름"
   default     = ""
 }
 
 variable "tags" {
-  type        = string
-  default     = ""
+  type        = map(string)
+  description = "공통 태그"
+  default     = {}
 }

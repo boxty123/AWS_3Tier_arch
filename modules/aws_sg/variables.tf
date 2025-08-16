@@ -50,6 +50,6 @@ variable "additional_egress" {
 
 
 variable "tags"{
-  type=string
-  default=""
+  type=map(string)
+  default={}
 }

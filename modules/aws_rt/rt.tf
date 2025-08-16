@@ -17,7 +17,7 @@ resource "aws_route" "default_ipv4"{
 }
 
 resource "aws_route_table_association" "subnets" {
-  for_each       = toset(var.subnet_ids)
+  for_each       = var.subnet_ids
   subnet_id      = each.value
   route_table_id = aws_route_table.this.id
 }

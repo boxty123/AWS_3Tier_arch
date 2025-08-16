@@ -19,14 +19,14 @@ variable "nat_gateway_id"{
     default=""
 }
 variable "subnet_ids"{
-    type=list(string)
-    default=[]
+    type=map(string)
+    default={}
 }
 variable "name"{
     type=string
     default="rt"
 }
 variable "tags"{
-    type=string
-    default=""
+    type=map(string)
+    default={}
 }
