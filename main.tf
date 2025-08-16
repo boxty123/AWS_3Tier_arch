@@ -46,14 +46,12 @@ module "aws_eip" {
 }
 
 # NAT
-locals {
-  public_by_az = { for _, s in module.aws_subnet.public_subnets : s.az => s.id }
-}
+locals { public_by_az = { for _, s in module.aws_subnet.public_subnets : s.az => s.id } }
 
 module "aws_natgw" {
   source    = "./modules/aws_natgw"
   eip_id    = module.aws_eip.allocation_id
-  subnet_id = local.public_by_az[var.nat_az]  
+  subnet_id = local.public_by_az[var.nat_az]
   nat_name  = "${var.project_name}-${var.environment}-nat"
 }
 
@@ -108,7 +106,7 @@ module "aws_sg_private" {
     Environment = var.environment
   }
 }
-/*
+
 # SSM Instance Profile 
 module "ssm_profile" {
   source = "./modules/aws_ssm"
@@ -123,9 +121,11 @@ module "ssm_profile" {
 module "aws_ec2_public" {
   source = "./modules/aws_ec2"
 
-  instance_name       = "${var.project_name}-${var.environment}-web"
-  instance_type       = "t2.micro"
-  subnet_id           = values(module.aws_subnet.public_subnets)[0].id
+  for_each=module.aws_subnet.public_subnets
+
+  instance_name       = "${var.project_name}-${var.environment}-web-${each.key}"
+  instance_type       = "t3.micro"
+  subnet_id           = each.value.id
   security_group_ids  = [module.aws_sg_public.id]
   associate_public_ip = true
 
@@ -141,9 +141,11 @@ module "aws_ec2_public" {
 module "aws_ec2_private" {
   source = "./modules/aws_ec2"
 
+  for_each=module.aws_subnet.private_subnets
+
   instance_name       = "${var.project_name}-${var.environment}-app"
-  instance_type       = "t2.micro"
-  subnet_id           = values(module.aws_subnet.private_subnets)[0].id
+  instance_type       = "t3.micro"
+  subnet_id           = each.value.id
   security_group_ids  = [module.aws_sg_private.id]
   associate_public_ip = false
 
@@ -154,4 +156,4 @@ module "aws_ec2_private" {
     Environment = var.environment
     Role        = "ec2-private"
   }
-}*/
+}

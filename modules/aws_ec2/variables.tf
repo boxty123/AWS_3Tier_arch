@@ -9,6 +9,7 @@ variable "instance_type" {
 
 variable "subnet_id" {
   type        = string
+  default=""
 }
 
 variable "security_group_ids" {

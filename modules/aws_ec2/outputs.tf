@@ -1,11 +1,12 @@
-output "instance_ids" {
-  value = { for k, i in aws_instance.this : k => i.id }
+
+output "instance_id" {
+  value = aws_instance.this.id
 }
 
-output "private_ips" {
-  value = { for k, i in aws_instance.this : k => i.private_ip }
+output "private_ip" {
+  value = aws_instance.this.private_ip
 }
 
-output "public_ips" {
-  value = { for k, i in aws_instance.this : k => try(i.public_ip, null) }
+output "public_ip" {
+  value = try(aws_instance.this.public_ip, null)
 }
