@@ -5,6 +5,7 @@ resource "aws_security_group" "this" {
   tags        = var.tags
 }
 
+/*
 resource "aws_security_group_rule" "ingress_http" {
   count             = var.allow_http ? 1 : 0
   type              = "ingress"
@@ -25,6 +26,17 @@ resource "aws_security_group_rule" "ingress_https" {
   protocol          = "tcp"
   cidr_blocks       = ["0.0.0.0/0"]
   description       = "HTTPS from anywhere"
+}
+*/
+resource "aws_security_group_rule" "ingress_all"{
+  count             = var.allow_all_egress ? 1 : 0
+  type              = "ingress"
+  security_group_id = aws_security_group.this.id
+  from_port         = 0
+  to_port           = 0
+  protocol          = "-1"
+  cidr_blocks       = ["0.0.0.0/0"]
+  description       = "All ingress" 
 }
 
 resource "aws_security_group_rule" "egress_all" {

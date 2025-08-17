@@ -1,10 +1,10 @@
-data "aws_ami" "al2023" {
+data "aws_ami" "al2" {
   most_recent = true
   owners      = ["137112412989"] # Amazon
 
   filter {
     name   = "name"
-    values = ["al2023-ami-*-x86_64"]
+    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
   }
 
   filter {
@@ -19,7 +19,7 @@ data "aws_ami" "al2023" {
 }
 
 resource "aws_instance" "this" {
-  ami                         = data.aws_ami.al2023.id
+  ami                         = data.aws_ami.al2.id
   instance_type               = var.instance_type
   subnet_id                   = var.subnet_id
 
@@ -27,7 +27,6 @@ resource "aws_instance" "this" {
   associate_public_ip_address = var.associate_public_ip
 
   iam_instance_profile = var.instance_profile != "" ? var.instance_profile : null
-
 
   tags = merge(
     { Name = var.instance_name },

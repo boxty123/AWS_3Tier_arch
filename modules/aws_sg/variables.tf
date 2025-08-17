@@ -15,6 +15,11 @@ variable "allow_https"{
   default=false
 }
 
+variable "allow_all_ingress"{
+  type=bool
+  default=true
+}
+
 variable "allow_all_egress"{
   type=bool
   default=true

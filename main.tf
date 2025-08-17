@@ -33,8 +33,8 @@ module "aws_subnet" {
   ]
 
   private_subnet_cidr_blocks = [
-    ["10.0.2.0/24", "10.0.4.0/24"], # 3a
-    ["10.0.3.0/24", "10.0.5.0/24"], # 3b
+    ["10.0.2.0/24", "10.0.4.0/24", "10.0.6.0/24"], # 3a
+    ["10.0.3.0/24", "10.0.5.0/24", "10.0.7.0/24"], # 3b
   ]
 }
 
@@ -89,8 +89,7 @@ module "aws_sg_public" {
   source      = "./modules/aws_sg"
   name        = "${var.project_name}-${var.environment}-public-ec2-sg"
   vpc_id      = module.aws_vpc.vpc_id
-  allow_http  = true
-  allow_https = true
+  allow_all_ingress=true
   tags = {
     Project     = var.project_name
     Environment = var.environment
@@ -124,7 +123,7 @@ module "aws_ec2_public" {
   for_each=module.aws_subnet.public_subnets
 
   instance_name       = "${var.project_name}-${var.environment}-web-${each.key}"
-  instance_type       = "t3.micro"
+  instance_type       = "t2.micro"
   subnet_id           = each.value.id
   security_group_ids  = [module.aws_sg_public.id]
   associate_public_ip = true
@@ -144,7 +143,7 @@ module "aws_ec2_private" {
   for_each=module.aws_subnet.private_subnets
 
   instance_name       = "${var.project_name}-${var.environment}-app"
-  instance_type       = "t3.micro"
+  instance_type       = "t2.micro"
   subnet_id           = each.value.id
   security_group_ids  = [module.aws_sg_private.id]
   associate_public_ip = false
