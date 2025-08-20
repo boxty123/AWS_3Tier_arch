@@ -17,7 +17,7 @@ variable "allow_https"{
 
 variable "allow_all_ingress"{
   type=bool
-  default=true
+  default=false
 }
 
 variable "allow_all_egress"{
@@ -52,7 +52,17 @@ variable "additional_egress" {
   default = []
 }
 
-
+variable "additional_sg_ingress" {
+  description = "추가 인바운드 (SG 기반)"
+  type = list(object({
+    from_port                = number
+    to_port                  = number
+    protocol                 = string
+    source_security_group_id = string
+    description              = optional(string)
+  }))
+  default = []
+}
 
 variable "tags"{
   type=map(string)

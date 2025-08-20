@@ -27,3 +27,4 @@ variable "nat_az" {
   description = "AZ where NAT Gateway will be placed"
   default = "ap-northeast-3a"
 }
+

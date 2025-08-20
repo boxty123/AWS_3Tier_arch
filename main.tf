@@ -100,11 +100,31 @@ module "aws_sg_private" {
   source = "./modules/aws_sg"
   name   = "${var.project_name}-${var.environment}-private-ec2-sg"
   vpc_id = module.aws_vpc.vpc_id
+
+  # ALB SG에서 들어오는 트래픽만 서비스 포트 허용
+  additional_sg_ingress = [
+    {
+      from_port                = 8080
+      to_port                  = 8080
+      protocol                 = "tcp"
+      source_security_group_id = module.aws_sg_ex_alb.id  # External ALB
+      description              = "App port from EX-ALB"
+    },
+    {
+      from_port                = 8080
+      to_port                  = 8080
+      protocol                 = "tcp"
+      source_security_group_id = module.aws_sg_in_alb.id  # Internal ALB
+      description              = "App port from IN-ALB"
+    }
+  ]
+
   tags = {
     Project     = var.project_name
     Environment = var.environment
   }
 }
+
 
 # SSM Instance Profile 
 module "ssm_profile" {
@@ -117,33 +137,13 @@ module "ssm_profile" {
 }
 
 # EC2 
-module "aws_ec2_public" {
-  source = "./modules/aws_ec2"
-
-  for_each=module.aws_subnet.public_subnets
-
-  instance_name       = "${var.project_name}-${var.environment}-web-${each.key}"
-  instance_type       = "t2.micro"
-  subnet_id           = each.value.id
-  security_group_ids  = [module.aws_sg_public.id]
-  associate_public_ip = true
-
-  instance_profile = module.ssm_profile.instance_profile_name
-
-  tags = {
-    Project     = var.project_name
-    Environment = var.environment
-    Role        = "ec2-public"
-  }
-}
-
 module "aws_ec2_private" {
   source = "./modules/aws_ec2"
 
   for_each=module.aws_subnet.private_subnets
 
-  instance_name       = "${var.project_name}-${var.environment}-app"
-  instance_type       = "t2.micro"
+  instance_name = "${var.project_name}-${var.environment}-app-${each.key}"
+  instance_type       = "t3.micro"
   subnet_id           = each.value.id
   security_group_ids  = [module.aws_sg_private.id]
   associate_public_ip = false
@@ -154,5 +154,65 @@ module "aws_ec2_private" {
     Project     = var.project_name
     Environment = var.environment
     Role        = "ec2-private"
+  }
+}
+
+# EXTERNAL ALB SG: 80 오픈 
+module "aws_sg_ex_alb" {
+  source = "./modules/aws_sg"
+  name   = "${var.project_name}-${var.environment}-ex-alb-sg"
+  vpc_id = module.aws_vpc.vpc_id
+
+  allow_http  = true
+  allow_https = false
+
+  tags = {
+    Project     = var.project_name
+    Environment = var.environment
+  }
+}
+
+
+# EX_ALB & IN_ALB
+module "aws_alb" {
+  source       = "./modules/aws_alb"
+  project_name = var.project_name
+  environment  = var.environment
+  vpc_id       = module.aws_vpc.vpc_id
+
+  protocol="HTTP"
+  port= 8080
+
+  ex_alb_sg_id = module.aws_sg_ex_alb.id
+  in_alb_sg_id = module.aws_sg_in_alb.id
+
+  public_subnet_ids = { for k, s in module.aws_subnet.public_subnets  : k => s.id }
+  private_subnet_ids = { for k, s in module.aws_subnet.private_subnets : k => s.id }
+
+  target_instance_map = {
+    for k, m in module.aws_ec2_private :k=> m.instance_id
+  }
+}
+
+
+# INTERNAL ALB SG: 내부에서만 80 오픈 (VPC CIDR 기준)
+module "aws_sg_in_alb" {
+  source = "./modules/aws_sg"
+  name   = "${var.project_name}-${var.environment}-in-alb-sg"
+  vpc_id = module.aws_vpc.vpc_id
+
+  additional_ingress = [
+    {
+      from_port   = 80
+      to_port     = 80
+      protocol    = "tcp"
+      cidr_blocks = [module.aws_vpc.vpc_cidr]
+      description = "HTTP from VPC"
+    }
+  ]
+
+  tags = {
+    Project     = var.project_name
+    Environment = var.environment
   }
 }
